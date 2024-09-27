@@ -147,7 +147,9 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow">
-        <div className="container mx-auto px-4 py-6 flex justify-end items-center">
+        <div className="container mx-auto px-4 py-6 flex justify-between items-center">
+          <p className="font-bold">Acme Inc.</p>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost">

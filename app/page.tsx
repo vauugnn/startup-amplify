@@ -42,8 +42,8 @@ export default function LandingPage() {
             description="Quickly jot down your ideas with our intuitive interface."
           />
           <FeatureCard
-            title="File Storage"
-            description="Securely store and organize all your important documents."
+            title="Insert Images"
+            description="Insert an Image to your note."
           />
           <FeatureCard
             title="Access Anywhere"
@@ -53,7 +53,7 @@ export default function LandingPage() {
       </main>
 
       <footer className="container mx-auto px-4 py-8 text-center text-gray-600">
-        <p>&copy; 2023 Acme Inc. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} Acme Inc. All rights reserved.</p>
       </footer>
     </div>
   );
