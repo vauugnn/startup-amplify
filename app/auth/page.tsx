@@ -139,7 +139,7 @@ export default function LoginRegister() {
                         <InputOTPGroup>
                           {Array.from({ length: OTP_LENGTH }).map(
                             (_, index) => (
-                              <InputOTPSlot index={index} />
+                              <InputOTPSlot key={index} index={index} />
                             )
                           )}
                         </InputOTPGroup>
