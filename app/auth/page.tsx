@@ -25,6 +25,7 @@ import { toast } from "@/hooks/use-toast";
 
 const AUTH_STEPS = ["login", "register"] as const;
 type Step = (typeof AUTH_STEPS)[number];
+const OTP_LENGTH = 6;
 
 export default function LoginRegister() {
   const [step, setStep] = useState<Step>("login");
@@ -136,12 +137,11 @@ export default function LoginRegister() {
                         onChange={(value) => setOtp(value)}
                       >
                         <InputOTPGroup>
-                          <InputOTPSlot index={0} />
-                          <InputOTPSlot index={1} />
-                          <InputOTPSlot index={2} />
-                          <InputOTPSlot index={3} />
-                          <InputOTPSlot index={4} />
-                          <InputOTPSlot index={5} />
+                          {Array.from({ length: OTP_LENGTH }).map(
+                            (_, index) => (
+                              <InputOTPSlot index={index} />
+                            )
+                          )}
                         </InputOTPGroup>
                       </InputOTP>
                       <p className="text-xs text-muted-foreground">
