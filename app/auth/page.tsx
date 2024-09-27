@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { confirmSignUp, signIn, signUp } from "aws-amplify/auth";
+
 import {
   Card,
   CardContent,
@@ -36,30 +38,54 @@ export default function LoginRegister() {
 
   const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    router.push("/dashboard");
-    // TODO: Implement login logic
-    console.log("Login attempt", { email, password });
+    try {
+      await signIn({
+        username: email,
+        password,
+      });
+      router.push("/dashboard");
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+      });
+    }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement registration logic
-    setShowOtp(true);
-    console.log("Register attempt", { email, password });
+    try {
+      await signUp({ username: email, password });
+      setShowOtp(true);
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+      });
+    }
   };
 
-  const handleConfirmRegistration = (e: React.FormEvent) => {
+  const handleConfirmRegistration = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement registration logic
-    setStep("login");
-    setShowOtp(false);
-    toast({
-      title: "Registration Successful!",
-      description: `Account with email ${email} has been registered`,
-    });
-    console.log("Register attempt", { email, password });
+    try {
+      await confirmSignUp({
+        username: email,
+        confirmationCode: otp,
+      });
+      setStep("login");
+      setShowOtp(false);
+      toast({
+        title: "Registration Successful!",
+        description: `Account with email ${email} has been registered`,
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+      });
+    }
   };
 
   return (
