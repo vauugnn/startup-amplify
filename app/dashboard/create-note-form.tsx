@@ -1,5 +1,6 @@
 "use client";
 
+import { ulid } from "ulid";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -18,6 +19,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { PlusCircle, Upload, X } from "lucide-react";
+import { client } from "@/lib/data";
 
 export default function CreateNoteForm() {
   const router = useRouter();
@@ -26,7 +28,7 @@ export default function CreateNoteForm() {
   const [image, setImage] = useState<File | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!title.trim() || !description.trim()) {
@@ -38,22 +40,33 @@ export default function CreateNoteForm() {
       return;
     }
 
-    // In a real app, you would send this data to your backend
     console.log("Submitting note:", { title, description, image });
 
-    toast({
-      title: "Note created",
-      description: "Your new note has been created successfully.",
-    });
+    try {
+      await client.models.Notes.create({
+        id: ulid(),
+        title,
+        description,
+      });
 
-    // Reset form and close dialog
-    setTitle("");
-    setDescription("");
-    setImage(null);
-    setIsOpen(false);
+      toast({
+        title: "Note created",
+        description: "Your new note has been created successfully.",
+      });
 
-    // Navigate to the dashboard (or the newly created note)
-    router.push("/dashboard");
+      // Reset form and close dialog
+      setTitle("");
+      setDescription("");
+      setImage(null);
+      setIsOpen(false);
+
+      // Navigate to the dashboard (or the newly created note)
+      router.push("/dashboard");
+    } catch (error) {
+      toast({
+        title: "Error",
+      });
+    }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
