@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
+import ConfigureAmplifyClient from "@/components/configure-amplify-client";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -15,6 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <ConfigureAmplifyClient />
         {children}
         <Toaster />
       </body>

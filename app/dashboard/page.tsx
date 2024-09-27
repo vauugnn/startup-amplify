@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import CreateNoteForm from "./create-note-form";
 import { useRouter } from "next/navigation";
+import { signOut } from "aws-amplify/auth";
 
 // Mock data for notes
 const notes = [
@@ -115,14 +116,18 @@ export default function Dashboard() {
     // Implement delete logic here
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     // Implement logout logic here
-    router.push("/auth");
-    console.log("User logged out");
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out.",
-    });
+    try {
+      await signOut();
+      router.push("/auth");
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+      });
+    } catch (error) {
+      console.error;
+    }
   };
 
   const handleUpdateAccount = (e: React.FormEvent) => {
