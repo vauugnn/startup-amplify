@@ -3,7 +3,6 @@
 import { ulid } from "ulid";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,6 +19,9 @@ import {
 } from "@/components/ui/dialog";
 import { PlusCircle, Upload, X } from "lucide-react";
 import { client } from "@/lib/data";
+import { uploadData } from "aws-amplify/storage";
+import { getS3Path } from "@/lib/utils";
+import { revalidatePath } from "next/cache";
 
 export default function CreateNoteForm() {
   const router = useRouter();
@@ -29,7 +31,9 @@ export default function CreateNoteForm() {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
+    let success = false;
     e.preventDefault();
+    let imageUrl: string | null = null;
 
     if (!title.trim() || !description.trim()) {
       toast({
@@ -43,10 +47,25 @@ export default function CreateNoteForm() {
     console.log("Submitting note:", { title, description, image });
 
     try {
+      if (image) {
+        const buffer = Buffer.from(await image.arrayBuffer());
+
+        const upload = uploadData({
+          data: buffer,
+          path: getS3Path(image.name),
+        });
+
+        console.log({ upload });
+
+        imageUrl = (await upload.result).path;
+        console.log({ imageUrl });
+      }
+
       await client.models.Notes.create({
         id: ulid(),
         title,
         description,
+        image: imageUrl,
       });
 
       toast({
@@ -60,13 +79,15 @@ export default function CreateNoteForm() {
       setImage(null);
       setIsOpen(false);
 
-      // Navigate to the dashboard (or the newly created note)
+      // Navigate to the dashboard (or the newly created note)'
+      success = true;
       router.push("/dashboard");
     } catch (error) {
       toast({
         title: "Error",
       });
     }
+    success && revalidatePath("/dashboard");
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,10 +151,9 @@ export default function CreateNoteForm() {
                 <div className="flex items-center justify-center w-32 h-32 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
                   {image ? (
                     <div className="relative w-full h-full">
-                      <Image
+                      <img
                         src={URL.createObjectURL(image)}
                         alt="Uploaded image"
-                        fill
                         className="object-cover rounded-lg"
                       />
                       <button

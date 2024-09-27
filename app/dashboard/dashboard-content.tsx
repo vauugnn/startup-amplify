@@ -40,45 +40,7 @@ import CreateNoteForm from "./create-note-form";
 import { useRouter } from "next/navigation";
 import { signOut } from "aws-amplify/auth";
 import { client, Note } from "@/lib/data";
-
-// Mock data for notes
-// const notes = [
-//   {
-//     id: 1,
-//     title: "Meeting Notes",
-//     description:
-//       "Discussed project timeline and deliverables for Q3. Action items include setting up weekly check-ins and defining KPIs.",
-//     createdAt: "2023-06-15T10:00:00Z",
-//   },
-//   {
-//     id: 2,
-//     title: "Ideas for New Feature",
-//     description:
-//       "Brainstormed potential features for the app. Top contenders: dark mode, collaborative editing, and integration with calendar apps.",
-//     createdAt: "2023-06-14T14:30:00Z",
-//   },
-//   {
-//     id: 3,
-//     title: "Book Recommendations",
-//     description:
-//       "List of books recommended by the team during lunch: 'Atomic Habits', 'The Pragmatic Programmer', and 'Designing Data-Intensive Applications'.",
-//     createdAt: "2023-06-13T12:45:00Z",
-//   },
-//   {
-//     id: 4,
-//     title: "Weekly Goals",
-//     description:
-//       "1. Finish the dashboard UI\n2. Start implementing user authentication\n3. Review and update project documentation\n4. Prepare for the client presentation on Friday",
-//     createdAt: "2023-06-12T09:15:00Z",
-//   },
-//   {
-//     id: 5,
-//     title: "Fitness Plan",
-//     description:
-//       "Monday: Upper body\nTuesday: Lower body\nWednesday: Cardio\nThursday: Core\nFriday: Full body\nSaturday: Yoga\nSunday: Rest",
-//     createdAt: "2023-06-11T18:20:00Z",
-//   },
-// ];
+import { revalidatePath } from "next/cache";
 
 // Mock user data
 const user = {
@@ -106,12 +68,6 @@ export default function DashboardContent({ notes }: { notes: Note[] }) {
     router.push(`/notes/${id}`);
   };
 
-  const handleEditNote = (id: string) => {
-    console.log(`Edit note ${id}`);
-    // Implement edit logic here
-    router.push(`/notes/${id}?mode='edit'`);
-  };
-
   const handleDeleteNote = async (id: string) => {
     try {
       await client.models.Notes.delete({ id });
@@ -119,7 +75,6 @@ export default function DashboardContent({ notes }: { notes: Note[] }) {
         title: "Note deleted",
         description: "The note has been permanently removed.",
       });
-      router.push("/dashboard");
     } catch (error) {
       console.error(error);
       toast({
@@ -196,6 +151,7 @@ export default function DashboardContent({ notes }: { notes: Note[] }) {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {!notes.length && <h1 className="text-3xl font-bold">No notes.</h1>}
           {notes.map((note) => (
             <Card
               key={note.id}
@@ -213,12 +169,20 @@ export default function DashboardContent({ notes }: { notes: Note[] }) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleViewNote(note.id)}>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewNote(note.id);
+                        }}
+                      >
                         <Eye className="mr-2 h-4 w-4" />
                         <span>View note</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => handleDeleteNote(note.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteNote(note.id);
+                        }}
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
                         <span>Delete note</span>

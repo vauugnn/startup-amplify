@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,41 +20,61 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { ChevronLeft, Pencil, Save, Trash2, Upload, X } from "lucide-react";
 import { client, Note } from "@/lib/data";
+import { uploadData, getUrl } from "aws-amplify/storage";
+import { getS3Path } from "@/lib/utils";
 
 export default function NoteContent({ note }: { note: Note }) {
   const router = useRouter();
-  const [currentNote, setNote] = useState(note);
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(note.title);
   const [description, setDescription] = useState(note.description);
-  const [image, setImage] = useState<string | null>(null);
+  const [image, setImage] = useState<File | null>(null);
+  const [imageUrl, setImageUrl] = useState("");
+
+  useEffect(() => {
+    const fetchImageUrl = async () => {
+      if (note.image) {
+        const url = (await getUrl({ path: note.image })).url.toString();
+        setImageUrl(url);
+      }
+    };
+    fetchImageUrl();
+  }, [note.image]);
 
   const handleSave = async () => {
     // In a real app, you would send this data to your backend
+    let uploadUrl: string | null = null;
     try {
+      if (image) {
+        const buffer = Buffer.from(await image.arrayBuffer());
+        const upload = uploadData({
+          data: buffer,
+          path: getS3Path(image.name),
+        });
+
+        uploadUrl = (await upload.result).path;
+      }
+
       await client.models.Notes.update({
         id: note.id,
         title,
         description,
-        image,
+        image: image ? uploadUrl : note.image,
       });
-      setNote({ ...note, title, description });
       setIsEditing(false);
       toast({
         title: "Note updated",
         description: "Your changes have been saved successfully.",
       });
-    } catch (error) {}
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleDiscard = () => {
     setTitle(note.title);
     setDescription(note.description);
-    if (note.image) {
-      setImage(note.image);
-    } else {
-      setImage(null);
-    }
+    setImage(null);
     setIsEditing(false);
   };
 
@@ -78,7 +97,7 @@ export default function NoteContent({ note }: { note: Note }) {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setImage(URL.createObjectURL(e.target.files[0]));
+      setImage(e.target.files[0]);
     }
   };
 
@@ -186,10 +205,9 @@ export default function NoteContent({ note }: { note: Note }) {
                 </Label>
                 {image && (
                   <div className="relative w-32 h-32">
-                    <Image
-                      src={image}
+                    <img
+                      src={URL.createObjectURL(image)}
                       alt="Uploaded image"
-                      fill
                       className="object-cover rounded-lg"
                     />
                   </div>
@@ -197,11 +215,10 @@ export default function NoteContent({ note }: { note: Note }) {
               </div>
             ) : (
               <div className="relative w-full h-64">
-                {currentNote.image && (
-                  <Image
-                    src={currentNote.image}
+                {note.image && imageUrl && (
+                  <img
+                    src={imageUrl}
                     alt="Note image"
-                    fill
                     className="object-cover rounded-lg"
                   />
                 )}

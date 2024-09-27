@@ -1,5 +1,6 @@
 import { cookiesClient } from "@/lib/server";
 import NoteContent from "./note-content";
+import { getUrl } from "aws-amplify/storage";
 
 export default async function NotePage({
   params: { id },
